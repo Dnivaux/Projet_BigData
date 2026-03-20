@@ -1,0 +1,2 @@
+# This file ensures the Dataset folder is tracked by git
+# Large CSV files are ignored via .gitignore

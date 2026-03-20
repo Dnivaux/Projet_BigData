@@ -1,0 +1,25 @@
+# CSV files in Dataset (too large for GitHub)
+Dataset/*.csv
+
+# OS files
+.DS_Store
+*.pdf
+*.docx
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+logs/
