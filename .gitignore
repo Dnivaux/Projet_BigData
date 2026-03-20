@@ -1,5 +1,6 @@
-# CSV files in Dataset (too large for GitHub)
-Dataset/*.csv
+# Dataset files (Too large for GitHub)
+Dataset/
+Dataset_Parquet/
 
 # OS files
 .DS_Store
