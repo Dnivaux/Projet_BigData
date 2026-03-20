@@ -10,27 +10,20 @@ st.set_page_config(page_title="H&M Data Dashboard", layout="wide")
 
 st.title("H&M Data Platform - Datamart Dashboard")
 
-# Authentication state
+# Auto-login to the API in the background (no UI)
 if 'token' not in st.session_state:
-    st.session_state['token'] = None
+    try:
+        response = requests.post(f"{API_URL}/token", data={"username": "admin", "password": "admin"})
+        if response.status_code == 200:
+            st.session_state['token'] = response.json()["access_token"]
+        else:
+            st.error("Failed to auto-login to API: Invalid credentials")
+            st.session_state['token'] = None
+    except Exception as e:
+        st.error(f"Failed to connect to API at {API_URL}: {e}")
+        st.session_state['token'] = None
 
-# Sidebar Login
-with st.sidebar:
-    st.header("Login")
-    username = st.text_input("Username", "admin")
-    password = st.text_input("Password", "admin", type="password")
-    if st.button("Login"):
-        try:
-            response = requests.post(f"{API_URL}/token", data={"username": username, "password": password})
-            if response.status_code == 200:
-                st.session_state['token'] = response.json()["access_token"]
-                st.success("Logged in successfully!")
-            else:
-                st.error("Invalid credentials")
-        except Exception as e:
-            st.error(f"Failed to connect to API: {e}")
-
-if st.session_state['token']:
+if st.session_state.get('token'):
     st.header("Datamart Analysis: Top Articles by Age Group")
     
     # Fetch Data
@@ -80,4 +73,4 @@ if st.session_state['token']:
         st.plotly_chart(fig3, use_container_width=True)
         
 else:
-    st.warning("Please log in from the sidebar to view data.")
+    st.warning("Could not auto-login to API. Is the API container running?")
