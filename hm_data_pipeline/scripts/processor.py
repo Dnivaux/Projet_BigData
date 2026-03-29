@@ -21,43 +21,37 @@ def main():
         customers = spark.read.parquet(f"{args.source}/customers")
         transactions = spark.read.parquet(f"{args.source}/transactions_train")
 
-        # Validation rules (5 rules)
-        logging.info("Applying Validation Rules")
-        # 1. Price > 0
+        logging.info("Validation ragles apppliquer")
+        # 1. Prix > 0
         transactions = transactions.filter(col("price") > 0)
-        # 2. Not null IDs
+        # 2. pas null IDs
         transactions = transactions.filter(col("customer_id").isNotNull() & col("article_id").isNotNull())
-        # 3. Valid customer age
+        # 3. Age client Valide
         customers = customers.filter((col("age") > 0) & (col("age") < 120))
-        # 4. Filter active customers
+        # 4. Filtre actif clients
         customers = customers.filter(col("Active").isNotNull())
-        # 5. Articles with valid product group
+        # 5. Articles avec groupe de produit
         articles = articles.filter(col("product_group_name").isNotNull())
 
-        # Join, Aggregate, Window functions
+
         logging.info("Joining, Aggregating and Windowing")
         
-        # We want to find the top products per customer age group
         # Create age groups
         customers = customers.withColumn("age_group", (col("age") / 10).cast("int") * 10)
-        
-        # Use cache since we use joined dataframe twice
+
         joined_df = transactions.join(customers, "customer_id", "inner") \
                                .join(articles, "article_id", "inner")
         joined_df.cache() # Optimize spark
 
-        # Aggregation: count transactions per article in each age group
         agg_df = joined_df.groupBy("age_group", "article_id", "product_group_name") \
                           .agg(count("*").alias("purchase_count"))
         
-        # Window function: rank the top articles within each age group
+
         windowSpec = Window.partitionBy("age_group").orderBy(desc("purchase_count"))
         ranked_df = agg_df.withColumn("rank", rank().over(windowSpec))
         
-        # Keep top 10
         top_10_df = ranked_df.filter(col("rank") <= 10)
         
-        # Partitioning by age_group for silver
         dest_path = f"{args.destination}/top_articles_by_age_group"
         logging.info(f"Writing Silver data to {dest_path}")
         top_10_df.write.mode("overwrite").partitionBy("age_group").parquet(dest_path)

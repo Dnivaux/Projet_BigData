@@ -24,7 +24,7 @@ def main():
             
             df = spark.read.parquet(source_path)
             
-            # Add ingestion date columns for partitioning
+
             df = df.withColumn("ingestion_date", current_date()) \
                    .withColumn("year", year("ingestion_date")) \
                    .withColumn("month", month("ingestion_date")) \
